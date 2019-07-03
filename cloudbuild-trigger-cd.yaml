@@ -53,7 +53,6 @@ steps:
     cd ${_REPO_NAME}-env && \
     git checkout candidate && \
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
-
 # This step generates the new manifest
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Generate manifest
@@ -62,8 +61,8 @@ steps:
   - '-c'
   - |
      sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
-     sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ${_REPO_NAME}-env/kubernetes.yaml
-
+     sed "s/COMMIT_SHA/${SHORT_SHA}/g" | \
+     sed "s/REPO_NAME/${_REPO_NAME}/g" > ${_REPO_NAME}-env/kubernetes.yaml
 # This step pushes the manifest back to hello-cloudbuild-env
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Push manifest
@@ -75,8 +74,7 @@ steps:
     cd ${_REPO_NAME}-env && \
     git add kubernetes.yaml && \
     git commit -m "Deploying image gcr.io/${PROJECT_ID}/${_REPO_NAME}-app:${SHORT_SHA}
-    Built from commit ${COMMIT_SHA} of repository hello-cloudbuild-app
+    Built from commit ${COMMIT_SHA} of repository ${_REPO_NAME}-app
     Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
     git push origin candidate
-
 # [END cloudbuild-trigger-cd]
